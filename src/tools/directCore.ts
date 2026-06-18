@@ -1,5 +1,5 @@
 import { callApi, baseUrl, rublesToMicros } from "../yandexApi.js";
-import { currentToken } from "../auth.js";
+import { currentToken, AuthError } from "../auth.js";
 import { text } from "../types.js";
 import type { ToolDef, Handler } from "../types.js";
 
@@ -1057,6 +1057,7 @@ export const directCoreHandlers: Record<string, Handler> = {
         await new Promise((r) => setTimeout(r, Number(resp.headers.get("retryIn") || 5) * 1000));
         continue;
       }
+      if (resp.status === 401 || resp.status === 403) throw new AuthError();
       return { content: [{ type: "text", text: `Report error ${resp.status}: ${await resp.text()}` }] };
     }
     return { content: [{ type: "text", text: "Report timeout after 30 attempts" }] };

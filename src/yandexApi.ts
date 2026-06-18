@@ -132,6 +132,8 @@ export async function metrikaFetch(httpMethod: string, path: string, init: { par
 const WEBMASTER_BASE = "https://api.webmaster.yandex.net/v4";
 let webmasterUserCache = { userId: "", oauth: "" };
 
+export function resetWebmasterCache(): void { webmasterUserCache = { userId: "", oauth: "" }; }
+
 export async function getWebmasterUserId(fetchImpl: typeof fetch = fetch): Promise<string> {
   const oauth = currentToken();
   if (webmasterUserCache.userId && webmasterUserCache.oauth === oauth) return webmasterUserCache.userId;

@@ -21,7 +21,7 @@ const LOGIN = process.env.YD_LOGIN || "";
 // Seed auth state on module import so dispatch tests work without calling main().
 initAuth();
 
-const MUTATING_TOKENS = ["_add", "_create", "_update", "_delete", "_action", "_set", "_toggle", "_link", "_unlink", "_upload"];
+const MUTATING_TOKENS = ["_add", "_create", "_update", "_delete", "_action", "_set", "_toggle", "_link", "_unlink", "_upload", "_start", "_submit"];
 const AUTH_TOOL_NAMES = new Set(AUTH_TOOLS.map((t) => t.name));
 
 export function isMutating(name: string): boolean {

@@ -44,3 +44,33 @@ test("READONLY blocks a mutating tool", async () => {
   const out = JSON.parse(res.content[0].text);
   assert.equal(out.denied, true);
 });
+
+test("isMutating: webmaster _start and _submit are mutating; _get is not", async () => {
+  const idx = await import(`../src/index.ts?d5`);
+  assert.equal(idx.isMutating("yd_webmaster_verification_start"), true);
+  assert.equal(idx.isMutating("yd_webmaster_recrawl_submit"), true);
+  assert.equal(idx.isMutating("yd_webmaster_hosts_get"), false);
+});
+
+test("YD_ALLOWED_LOGINS: denied for non-whitelisted login, not denied for whitelisted or absent login", async () => {
+  process.env.YD_ALLOWED_LOGINS = "agency1";
+  process.env.YD_OAUTH_TOKEN = "tok";
+  const idx = await import(`../src/index.ts?d6`);
+
+  // Non-whitelisted login → denied
+  const res1 = await idx.dispatch("yd_campaigns_get", { client_login: "other" });
+  const out1 = JSON.parse(res1.content[0].text);
+  assert.equal(out1.denied, true, "Expected denied for non-whitelisted client_login");
+
+  // Whitelisted login → NOT denied (may fail at network/handler, but no denied:true)
+  const res2 = await idx.dispatch("yd_campaigns_get", { client_login: "agency1" });
+  const out2 = JSON.parse(res2.content[0].text);
+  assert.ok(out2.denied !== true, "Expected allowed for whitelisted client_login");
+
+  // No client_login → whitelist bypass (not denied)
+  const res3 = await idx.dispatch("yd_campaigns_get", {});
+  const out3 = JSON.parse(res3.content[0].text);
+  assert.ok(out3.denied !== true, "Expected no deny when client_login is absent");
+
+  delete process.env.YD_ALLOWED_LOGINS;
+});

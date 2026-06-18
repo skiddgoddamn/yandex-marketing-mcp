@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { webmasterTools, webmasterHandlers } from "../src/tools/webmaster.ts";
-import { getWebmasterUserId, webmasterFetch } from "../src/yandexApi.ts";
+import { getWebmasterUserId, webmasterFetch, resetWebmasterCache } from "../src/yandexApi.ts";
 
 // ── Tool registration checks ─────────────────────────────────────────────────
 
@@ -50,35 +50,21 @@ function makeFakeAuth(userId: string) {
   return { fakeFetch, calls };
 }
 
-test("webmasterFetch: first call resolves user_id via /v4/user/", async () => {
-  // Reset the module-level cache by using a unique oauth — we do this by
-  // reimporting with a fresh process? No — instead we test via the exported fn
-  // directly with a fake fetch. The cache key is currentToken(); since tests
-  // run with no real token (empty string), first call always hits /user/.
-  // We need to reset the cache between tests. We do it by monkeypatching
-  // the module. Instead, let's just test the URL sequence directly.
+test("webmasterFetch: first call resolves user_id via /v4/user/, second uses cache", async () => {
+  // Reset cache so this test is self-contained regardless of execution order.
+  resetWebmasterCache();
 
   const { calls, fakeFetch } = makeFakeAuth("42");
 
-  // We call webmasterFetch with a unique fetch so it goes through our fake
-  // BUT getWebmasterUserId internally calls currentToken() which returns "".
-  // The cache in yandexApi.ts is module-level; since scaffold.test imported
-  // index which imports auth with empty state, currentToken()=="".
-  // The cache was set for oauth="" by a prior test run in same process — but
-  // since we're the first webmaster test file run, it should be cold.
-  // To guarantee a cold cache path we test the URL sequence:
-
+  // Cold cache — must hit /v4/user/ first then the resource.
   await webmasterFetch("get", "/hosts/", {}, fakeFetch);
 
-  assert.ok(calls.length >= 2, `Expected at least 2 fetch calls, got ${calls.length}`);
+  assert.ok(calls.length >= 2, `Expected at least 2 fetch calls on cold cache, got ${calls.length}`);
   assert.ok(calls[0].url.includes("/v4/user/"), `First call should hit /v4/user/, got: ${calls[0].url}`);
   assert.ok(calls[1].url.includes("/v4/user/") && calls[1].url.includes("/hosts/"),
     `Second call should include user_id and /hosts/, got: ${calls[1].url}`);
-});
 
-test("webmasterFetch: second call uses cached user_id (no extra /user/ fetch)", async () => {
-  // After first call above the cache is warm for oauth=""
-  // A second call should skip /user/ and go straight to the resource
+  // Warm cache — second call should skip /user/ entirely.
   const calls2: Array<{ url: string }> = [];
   const fakeFetch2: typeof fetch = async (input) => {
     const url = typeof input === "string" ? input : (input as Request).url;
@@ -88,7 +74,6 @@ test("webmasterFetch: second call uses cached user_id (no extra /user/ fetch)", 
 
   await webmasterFetch("get", "/hosts/", {}, fakeFetch2);
 
-  // Should be exactly 1 call (cache hit, no /user/ call)
   assert.equal(calls2.length, 1, `Expected 1 call (cache hit), got ${calls2.length}`);
   assert.ok(!calls2[0].url.endsWith("/v4/user/"), "Cached call should not hit /user/");
   assert.ok(calls2[0].url.includes("/hosts/"), `Should hit /hosts/, got: ${calls2[0].url}`);
