@@ -107,6 +107,8 @@ export async function getIamToken(fetchImpl: typeof fetch = fetch): Promise<stri
   return iamCache.token;
 }
 
+export function rublesToMicros(rubles: number): number { return Math.round(rubles * 1_000_000); }
+
 export async function metrikaFetch(httpMethod: string, path: string, init: { params?: Record<string, unknown>; body?: unknown } = {}, fetchImpl: typeof fetch = fetch): Promise<any> {
   let url = `${METRIKA_BASE}${path}`;
   if (init.params) {

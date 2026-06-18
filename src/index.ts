@@ -7,6 +7,7 @@ import type { ToolDef, Handler } from "./types.js";
 import { text } from "./types.js";
 import { initAuth, currentToken, AuthError, authRequiredPayload, AUTH_TOOLS, authHandlers } from "./auth.js";
 import { metrikaTools, metrikaHandlers } from "./tools/metrika.js";
+import { directCoreTools, directCoreHandlers } from "./tools/directCore.js";
 import { log } from "./log.js";
 
 const READONLY = (process.env.YD_READONLY || "").toLowerCase() === "true";
@@ -32,6 +33,7 @@ export function isDirect(name: string): boolean {
 export const ALL_TOOLS: ToolDef[] = [...AUTH_TOOLS];
 export const HANDLERS: Record<string, Handler> = { ...authHandlers };
 registerTools(metrikaTools, metrikaHandlers);
+registerTools(directCoreTools, directCoreHandlers);
 
 export function registerTools(defs: ToolDef[], handlers: Record<string, Handler>): void {
   ALL_TOOLS.push(...defs);
