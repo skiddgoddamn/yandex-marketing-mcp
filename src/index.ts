@@ -9,6 +9,7 @@ import { initAuth, currentToken, AuthError, authRequiredPayload, AUTH_TOOLS, aut
 import { metrikaTools, metrikaHandlers } from "./tools/metrika.js";
 import { directCoreTools, directCoreHandlers } from "./tools/directCore.js";
 import { directExtraTools, directExtraHandlers } from "./tools/directExtra.js";
+import { wordstatTools, wordstatHandlers } from "./tools/wordstat.js";
 import { log } from "./log.js";
 
 const READONLY = (process.env.YD_READONLY || "").toLowerCase() === "true";
@@ -36,6 +37,7 @@ export const HANDLERS: Record<string, Handler> = { ...authHandlers };
 registerTools(metrikaTools, metrikaHandlers);
 registerTools(directCoreTools, directCoreHandlers);
 registerTools(directExtraTools, directExtraHandlers);
+registerTools(wordstatTools, wordstatHandlers);
 
 export function registerTools(defs: ToolDef[], handlers: Record<string, Handler>): void {
   ALL_TOOLS.push(...defs);
