@@ -1668,3 +1668,10 @@ AuthError on 401/403), appends `webmaster:hostview`/`webmaster:verify` to `REQUI
 extends `isDirect()` to exclude `yd_webmaster_*`. Consequently **Task 11 parity asserts 153 tools**
 (123 + 30), and **Task 12 docs** include the Webmaster table + the two webmaster scopes. Inserted
 into the execution order between Task 10 and Task 11.
+
+## Addendum — final name
+
+This plan uses the working name `yandex-mcp`. The project **shipped as `yandex-marketing-mcp`**
+(umbrella for Direct + Metrika + Wordstat + Webmaster): package `yandex-marketing-mcp`, server
+identity `yandex-marketing`, config dir `~/.yandex-marketing-mcp/`, directory
+`f:\projects\yandex-marketing-mcp`.

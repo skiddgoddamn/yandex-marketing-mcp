@@ -91,7 +91,7 @@ function augment(tool: ToolDef): ToolDef {
   return { ...tool, inputSchema: schema };
 }
 
-const server = new Server({ name: "yandex", version: "2.0.0" }, { capabilities: { tools: {} } });
+const server = new Server({ name: "yandex-marketing", version: "2.0.0" }, { capabilities: { tools: {} } });
 server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: ALL_TOOLS.map(augment) }));
 server.setRequestHandler(CallToolRequestSchema, async (req) => {
   const { name, arguments: args = {} } = req.params;
@@ -101,7 +101,7 @@ server.setRequestHandler(CallToolRequestSchema, async (req) => {
 export async function main(): Promise<void> {
   initAuth();
   if (!currentToken()) log.warning("No OAuth token configured yet — use yd_set_client_id then yd_set_token. Server starting anyway.");
-  log.info(`Starting yandex MCP server (tools=${ALL_TOOLS.length})`);
+  log.info(`Starting yandex-marketing MCP server (tools=${ALL_TOOLS.length})`);
   await server.connect(new StdioServerTransport());
 }
 

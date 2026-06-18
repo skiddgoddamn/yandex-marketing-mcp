@@ -1,10 +1,10 @@
 {
-  "name": "yandex-mcp",
+  "name": "yandex-marketing-mcp",
   "version": "2.0.0",
-  "description": "MCP server for Yandex Direct, Metrika, and Wordstat with self-configuring OAuth",
+  "description": "MCP server for Yandex Direct, Metrika, Wordstat, and Webmaster with self-configuring OAuth",
   "license": "MIT",
   "type": "module",
-  "bin": { "yandex-mcp": "build/index.js" },
+  "bin": { "yandex-marketing-mcp": "build/index.js" },
   "engines": { "node": ">=20" },
   "scripts": {
     "build": "tsc",

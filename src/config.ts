@@ -9,7 +9,7 @@ export interface StoredConfig {
 }
 
 function configDir(): string {
-  return process.env.YANDEX_MCP_CONFIG_DIR || join(homedir(), ".yandex-mcp");
+  return process.env.YANDEX_MCP_CONFIG_DIR || join(homedir(), ".yandex-marketing-mcp");
 }
 function configPath(): string {
   return join(configDir(), "config.json");

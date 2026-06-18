@@ -252,3 +252,11 @@ extra + 5 Wordstat + 43 Metrika + 30 Webmaster).
   diagnostics, SQI history, sitemaps (+ user-added CRUD), indexing (history/samples), in-search &
   search-events, search queries (popular + history), external & broken links, recrawl
   (submit/list/task/quota), important URLs.
+
+## 18. Addendum — final name
+
+This document uses the working name `yandex-mcp` throughout. The project **shipped as
+`yandex-marketing-mcp`** (the umbrella for Direct + Metrika + Wordstat + Webmaster): package name
+`yandex-marketing-mcp`, server identity `yandex-marketing`, config dir `~/.yandex-marketing-mcp/`,
+directory `f:\projects\yandex-marketing-mcp`. Mentions of `yandex-mcp`/`yandex` above should be read
+as `yandex-marketing-mcp`/`yandex-marketing`.
