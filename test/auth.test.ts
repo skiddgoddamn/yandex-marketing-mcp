@@ -1,6 +1,6 @@
 import { test, beforeEach } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync } from "node:fs";
+import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -43,4 +43,22 @@ test("in-memory set overrides file overrides env", async () => {
   auth.initAuth();
   auth.setToken("settok");
   assert.equal(auth.currentToken(), "settok");
+});
+
+test("validateToken resolves true on 200, false on 401/403, throws on 500", async () => {
+  const auth = await import(`../src/auth.ts?5`);
+  const fakeFetch = (status: number) => async () => new Response("", { status });
+  assert.equal(await auth.validateToken("tok", fakeFetch(200)), true);
+  assert.equal(await auth.validateToken("tok", fakeFetch(401)), false);
+  assert.equal(await auth.validateToken("tok", fakeFetch(403)), false);
+  await assert.rejects(() => auth.validateToken("tok", fakeFetch(500)), /HTTP 500/);
+});
+
+test("config file overrides env seed (resolution order §12)", async () => {
+  process.env.YD_OAUTH_TOKEN = "envtok";
+  const configDir = process.env.YANDEX_MCP_CONFIG_DIR!;
+  writeFileSync(join(configDir, "config.json"), JSON.stringify({ oauth_token: "filetok" }));
+  const auth = await import(`../src/auth.ts?6`);
+  auth.initAuth();
+  assert.equal(auth.currentToken(), "filetok");
 });
