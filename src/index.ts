@@ -10,6 +10,7 @@ import { metrikaTools, metrikaHandlers } from "./tools/metrika.js";
 import { directCoreTools, directCoreHandlers } from "./tools/directCore.js";
 import { directExtraTools, directExtraHandlers } from "./tools/directExtra.js";
 import { wordstatTools, wordstatHandlers } from "./tools/wordstat.js";
+import { webmasterTools, webmasterHandlers } from "./tools/webmaster.js";
 import { log } from "./log.js";
 
 const READONLY = (process.env.YD_READONLY || "").toLowerCase() === "true";
@@ -29,7 +30,7 @@ export function isMutating(name: string): boolean {
 }
 
 export function isDirect(name: string): boolean {
-  return name.startsWith("yd_") && !name.startsWith("yd_metrika") && !name.startsWith("yd_wordstat");
+  return name.startsWith("yd_") && !name.startsWith("yd_metrika") && !name.startsWith("yd_wordstat") && !name.startsWith("yd_webmaster");
 }
 
 export const ALL_TOOLS: ToolDef[] = [...AUTH_TOOLS];
@@ -38,6 +39,7 @@ registerTools(metrikaTools, metrikaHandlers);
 registerTools(directCoreTools, directCoreHandlers);
 registerTools(directExtraTools, directExtraHandlers);
 registerTools(wordstatTools, wordstatHandlers);
+registerTools(webmasterTools, webmasterHandlers);
 
 export function registerTools(defs: ToolDef[], handlers: Record<string, Handler>): void {
   ALL_TOOLS.push(...defs);

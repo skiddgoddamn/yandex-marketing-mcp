@@ -128,3 +128,47 @@ export async function metrikaFetch(httpMethod: string, path: string, init: { par
   if (resp.status >= 400) throw new Error(`Metrika API error ${resp.status}: ${(await resp.text()).slice(0, 500)}`);
   return resp.json();
 }
+
+const WEBMASTER_BASE = "https://api.webmaster.yandex.net/v4";
+let webmasterUserCache = { userId: "", oauth: "" };
+
+export async function getWebmasterUserId(fetchImpl: typeof fetch = fetch): Promise<string> {
+  const oauth = currentToken();
+  if (webmasterUserCache.userId && webmasterUserCache.oauth === oauth) return webmasterUserCache.userId;
+  const resp = await fetchImpl(`${WEBMASTER_BASE}/user/`, { headers: { Authorization: `OAuth ${oauth}` } });
+  if (resp.status === 401 || resp.status === 403) throw new AuthError();
+  if (resp.status >= 400) throw new Error(`Webmaster API error ${resp.status}: ${(await resp.text()).slice(0, 500)}`);
+  const data = await resp.json();
+  webmasterUserCache = { userId: String(data.user_id), oauth };
+  return webmasterUserCache.userId;
+}
+
+export async function webmasterFetch(
+  httpMethod: string,
+  subpath: string,
+  init: { params?: Record<string, unknown>; body?: unknown } = {},
+  fetchImpl: typeof fetch = fetch,
+): Promise<any> {
+  const userId = await getWebmasterUserId(fetchImpl);
+  let url = `${WEBMASTER_BASE}/user/${userId}${subpath}`;
+  if (init.params) {
+    const qs = new URLSearchParams();
+    for (const [k, v] of Object.entries(init.params)) {
+      if (v === undefined || v === null) continue;
+      if (Array.isArray(v)) v.forEach((x) => qs.append(k, String(x)));
+      else qs.append(k, String(v));
+    }
+    const q = qs.toString();
+    if (q) url += (url.includes("?") ? "&" : "?") + q;
+  }
+  const reqInit: RequestInit = { method: httpMethod.toUpperCase(), headers: { Authorization: `OAuth ${currentToken()}` } };
+  if (init.body !== undefined) {
+    (reqInit.headers as Record<string, string>)["Content-Type"] = "application/json";
+    reqInit.body = JSON.stringify(init.body);
+  }
+  const resp = await fetchImpl(url, reqInit);
+  if (resp.status === 204) return { success: true };
+  if (resp.status === 401 || resp.status === 403) throw new AuthError();
+  if (resp.status >= 400) throw new Error(`Webmaster API error ${resp.status}: ${(await resp.text()).slice(0, 500)}`);
+  return resp.json();
+}

@@ -9,7 +9,7 @@ export class AuthError extends Error {
   }
 }
 
-export const REQUIRED_SCOPES = ["direct:api", "metrika:read", "metrika:write", "cloud:auth"];
+export const REQUIRED_SCOPES = ["direct:api", "metrika:read", "metrika:write", "cloud:auth", "webmaster:hostview", "webmaster:verify"];
 export const REGISTER_APP_URL = "https://oauth.yandex.ru/client/new";
 
 let state: StoredConfig = {};
