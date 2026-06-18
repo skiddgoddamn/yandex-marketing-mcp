@@ -1,0 +1,14 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.log
+.env
+*.egg-info/
+dist/
+build/
+.claude/
+node_modules/
+
+# internal design/planning docs — not published
+docs/

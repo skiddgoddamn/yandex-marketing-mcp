@@ -1,0 +1,43 @@
+{
+  "name": "yandex-marketing-mcp",
+  "version": "2.0.0",
+  "description": "MCP server for Yandex Direct, Metrika, Wordstat, and Webmaster with self-configuring OAuth",
+  "license": "MIT",
+  "author": "skiddgoddamn <zaytsv.business@mail.ru>",
+  "type": "module",
+  "bin": { "yandex-marketing-mcp": "build/index.js" },
+  "files": ["build"],
+  "engines": { "node": ">=20" },
+  "repository": { "type": "git", "url": "git+https://github.com/skiddgoddamn/yandex-marketing-mcp.git" },
+  "homepage": "https://github.com/skiddgoddamn/yandex-marketing-mcp#readme",
+  "bugs": { "url": "https://github.com/skiddgoddamn/yandex-marketing-mcp/issues" },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "yandex",
+    "yandex-direct",
+    "yandex-metrika",
+    "wordstat",
+    "yandex-webmaster",
+    "claude",
+    "oauth",
+    "seo",
+    "advertising",
+    "web-analytics",
+    "ai-agents"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node build/index.js",
+    "test": "node --import tsx --test test/*.test.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}
