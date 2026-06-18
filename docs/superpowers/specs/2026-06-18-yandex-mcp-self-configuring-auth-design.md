@@ -234,3 +234,21 @@ None — stack (Node/TS, MCP SDK low-level `Server`, JSON Schema, `node:test`), 
 (`yandex-mcp`), folder rename (yes), Python removal after parity, auth flow (implicit link +
 `yd_set_token`), client_id source (user-supplied), and credential storage
 (`~/.yandex-mcp/config.json`) are resolved.
+
+## 17. Addendum — Yandex Webmaster API (added during build)
+
+A fourth service was added: **Yandex Webmaster API v4** (`src/tools/webmaster.ts`, 30 tools,
+`yd_webmaster_*`). This raises the total to **153 tools** (3 auth + 46 Direct core + 26 Direct
+extra + 5 Wordstat + 43 Metrika + 30 Webmaster).
+
+- **Client:** `webmasterFetch(method, subpath, {params, body})` + `getWebmasterUserId()` in
+  `yandexApi.ts`. Base `https://api.webmaster.yandex.net/v4`; `OAuth <token>` header; the `user_id`
+  is resolved once from `GET /v4/user/` and cached by OAuth token; subpaths are auto-prefixed with
+  `/user/{user_id}`. Array query params (e.g. `query_indicator`) are sent as **repeated** params.
+  401/403 → `AuthError`; 204 → `{success:true}`; other ≥400 → `Error`.
+- **Scopes:** `REQUIRED_SCOPES` gains `webmaster:hostview` and `webmaster:verify` (now 6 scopes).
+- **Classification:** `isDirect()` also excludes `yd_webmaster_*` (these don't use Client-Login).
+- **Coverage:** hosts (list/add/get/delete), summary, verification (get/start), owners,
+  diagnostics, SQI history, sitemaps (+ user-added CRUD), indexing (history/samples), in-search &
+  search-events, search queries (popular + history), external & broken links, recrawl
+  (submit/list/task/quota), important URLs.

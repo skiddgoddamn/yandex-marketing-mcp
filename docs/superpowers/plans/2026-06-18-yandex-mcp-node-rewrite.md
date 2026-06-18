@@ -1655,3 +1655,16 @@ Run: `cd /f/projects/yandex-mcp && node build/index.js` (it should start and wai
 **Placeholder scan:** Infra tasks (1–6, 11) contain complete code. Tool-port tasks (7–10) use a fully-specified deterministic recipe + a worked example each + the Python source as the named line-referenced authority + the parity test as the completeness gate — this is the correct way to plan a mechanical 1:1 port and is not a placeholder.
 
 **Type consistency:** `Handler = (args, ctx)` used everywhere; `ToolContext.clientLogin` consistent; `callApi(service, method, params, ctx)` / `metrikaFetch(method, path, {params,body})` / `getIamToken()` / `currentToken()` signatures match across tasks; `registerTools(defs, handlers)` and `ALL_TOOLS`/`HANDLERS` consistent between Task 6 and Tasks 7–11; `text()` return type `CallToolResult` consistent.
+
+---
+
+## Addendum — Task W: Yandex Webmaster API (added during execution)
+
+After Task 10, a fourth service was added at the user's request: **Yandex Webmaster API v4** —
+`src/tools/webmaster.ts`, **30 tools** (`yd_webmaster_*`), implemented from the verified official
+endpoint table (no Python source existed). Adds `webmasterFetch` + `getWebmasterUserId` to
+`yandexApi.ts` (auto-prefix `/user/{user_id}`, cached user-id, repeated array query params,
+AuthError on 401/403), appends `webmaster:hostview`/`webmaster:verify` to `REQUIRED_SCOPES`, and
+extends `isDirect()` to exclude `yd_webmaster_*`. Consequently **Task 11 parity asserts 153 tools**
+(123 + 30), and **Task 12 docs** include the Webmaster table + the two webmaster scopes. Inserted
+into the execution order between Task 10 and Task 11.
