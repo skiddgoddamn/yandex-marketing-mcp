@@ -6,8 +6,10 @@
 
 ## 1. Context
 
-The project at `f:\projects\metrika-mcp` is a fork of `Yurich-ru/yandex-ads-mcp`: a **Python**
-**stdio** MCP server exposing 120 tools across three Yandex services:
+`yandex-mcp` is a new, standalone Node/TypeScript **stdio** MCP server exposing 120 tools across
+three Yandex services. A Python prototype currently lives in this repo and is used **only** as the
+porting reference; the shipped project carries **no fork/upstream attribution** and no reference to
+the old `metrika-mcp` name. The Python sources being ported:
 
 - **Yandex Direct** (77 tools) — `server.py` inline `TOOLS` + `tools_direct_extra.py`
 - **Yandex Metrika** (43 tools) — `tools_metrika.py`
@@ -168,7 +170,7 @@ Wordstat re-derives IAM from the new OAuth token.
 
 ## 10. Safety wrapper (ported)
 
-Port the fork's protections with identical behavior and **same env var names** (back-compat):
+Port the existing safety protections with identical behavior and **same env var names** (back-compat):
 `YD_READONLY`, `YD_CONFIRM`, `YD_ALLOWED_LOGINS` (Direct multi-account whitelist + per-call
 `client_login`), `YD_SANDBOX`, `YD_LOGIN`, logging envs (`YD_LOG_LEVEL`/`YD_LOG_FILE`/`YD_LOG_BODIES`,
 default: no file on disk), and the Direct partial-success annotation. Mutating-tool classification
@@ -210,11 +212,14 @@ non-mutating.
 - **README.md:** rewrite for Node — install (`npm i`/`npm run build`), MCP client config snippet
   (`node …/yandex-mcp/build/index.js`), the auth flow (register → `yd_set_client_id` → link →
   `yd_set_token`), `~/.yandex-mcp/config.json` as source of truth, env table
-  (`YD_OAUTH_TOKEN`/`YANDEX_OAUTH_CLIENT_ID`/`YC_FOLDER_ID` + safety/logging envs), folder/stack
-  migration caveat. Keep the full tool tables.
+  (`YD_OAUTH_TOKEN`/`YANDEX_OAUTH_CLIENT_ID`/`YC_FOLDER_ID` + safety/logging envs). Keep the full
+  tool tables. **Clean new-project identity:** no fork/upstream attribution, no "доработки форка"
+  section, no mention of the old `metrika-mcp`/`yandex-ads-mcp` names.
 - **.env.example:** add `YANDEX_OAUTH_CLIENT_ID`; note all credentials optional (server starts and
   guides via tools); keep safety/logging vars.
 - **package.json / tsconfig.json:** new.
+- **Git:** detach from the upstream repo — remove the `origin` remote (`Yurich-ru/yandex-ads-mcp`),
+  since this is a standalone new project.
 
 ## 15. Backward compatibility
 

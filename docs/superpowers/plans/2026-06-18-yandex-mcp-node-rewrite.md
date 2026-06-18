@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Rewrite the Python `metrika-mcp` server as a Node/TypeScript MCP server (`yandex-mcp`) that ports all 120 Yandex Direct/Metrika/Wordstat tools verbatim and adds a self-configuring OAuth flow (clickable authorize link + token-set tools, no restart).
+**Goal:** Build `yandex-mcp`, a standalone Node/TypeScript MCP server providing 123 Yandex Direct/Metrika/Wordstat + auth tools — porting tool behavior from the existing Python source in this repo and adding a self-configuring OAuth flow (clickable authorize link + token-set tools, no restart). The shipped project carries no fork/upstream attribution and no reference to the old `metrika-mcp` name.
 
 **Architecture:** A low-level `@modelcontextprotocol/sdk` `Server` over stdio. `src/index.ts` merges tool definitions + handler maps from `tools/*.ts`, and its `tools/call` handler is the single dispatcher implementing the safety wrapper (READONLY/CONFIRM/whitelist), the auth-gate (returns a structured authorize-link payload when no/invalid token), and central `AuthError` handling. Credentials live in `src/auth.ts` backed by `~/.yandex-mcp/config.json` (`config.ts`); all API token reads are dynamic so `yd_set_token` takes effect without a restart.
 
@@ -1578,8 +1578,8 @@ YD_LOG_BODIES=false
     { "yandex": { "type": "stdio", "command": "node", "args": ["F:/projects/yandex-mcp/build/index.js"] } }
     ```
   - **Авторизация (self-setup):** register app → call `yd_set_client_id` (returns link) → open link, approve, copy `access_token` → call `yd_set_token`. Note `~/.yandex-mcp/config.json` is the source of truth; env vars are optional seeds.
-  - **Migration note:** the command changed from `python server.py` to `node build/index.js`, and the directory is now `yandex-mcp` — update your MCP client config path.
   - Keep the full tool tables (Direct/Metrika/Wordstat) and the safety/env table.
+  - **Clean new-project identity:** do NOT include any fork/upstream attribution, the old README's "доработки форка" section, or any mention of the `metrika-mcp`/`yandex-ads-mcp` names or the `Yurich-ru/yandex-ads-mcp` repo. Write it as a fresh standalone project.
 
 - [ ] **Step 3: Commit**
 
@@ -1608,6 +1608,16 @@ Expected: all suites PASS (incl. parity 123).
 ```bash
 git rm server.py tools_metrika.py tools_direct_extra.py test_safety.py requirements.txt pyproject.toml
 git commit -m "chore: remove Python implementation (superseded by Node port)"
+```
+
+- [ ] **Step 2b: Detach from the upstream repo (this is a standalone new project)**
+
+Verify the remote points at upstream, then remove it so nothing is accidentally pushed to the old fork:
+
+```bash
+git remote -v                 # expect: origin  https://github.com/Yurich-ru/yandex-ads-mcp.git
+git remote remove origin
+git remote -v                 # expect: (no output)
 ```
 
 - [ ] **Step 3: Rename the directory** (run from `f:/projects`, with no shell/editor holding the folder open — on Windows a directory in use cannot be renamed)
