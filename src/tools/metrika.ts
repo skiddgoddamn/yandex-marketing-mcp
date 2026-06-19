@@ -839,7 +839,7 @@ export const metrikaHandlers: Record<string, Handler> = {
     const cid = Number(args.counter_id);
     const ann: Record<string, unknown> = { date: args.date, title: args.title };
     if (args.message) ann.message = args.message;
-    return text(await metrikaFetch("post", `/management/v1/counter/${cid}/chart_annotation`, { body: { annotation: ann } }));
+    return text(await metrikaFetch("post", `/management/v1/counter/${cid}/chart_annotations`, { body: { annotation: ann } }));
   },
 
   async yd_metrika_annotation_update(args) {
@@ -849,11 +849,11 @@ export const metrikaHandlers: Record<string, Handler> = {
     for (const k of ["date", "title", "message"] as const) {
       if (args[k] != null) ann[k] = args[k];
     }
-    return text(await metrikaFetch("put", `/management/v1/counter/${cid}/chart_annotation/${aid}`, { body: { annotation: ann } }));
+    return text(await metrikaFetch("put", `/management/v1/counter/${cid}/chart_annotations/${aid}`, { body: { annotation: ann } }));
   },
 
   async yd_metrika_annotation_delete(args) {
-    return text(await metrikaFetch("delete", `/management/v1/counter/${Number(args.counter_id)}/chart_annotation/${Number(args.annotation_id)}`));
+    return text(await metrikaFetch("delete", `/management/v1/counter/${Number(args.counter_id)}/chart_annotations/${Number(args.annotation_id)}`));
   },
 
   // ── DELEGATES ───────────────────────────────────────────────────────

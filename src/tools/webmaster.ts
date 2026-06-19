@@ -242,11 +242,14 @@ export const webmasterTools: ToolDef[] = [
       type: "object",
       properties: {
         host_id: { type: "string", description: "Host ID (from yd_webmaster_hosts_get)" },
-        order_by: { type: "string", enum: ["TOTAL_SHOWS", "TOTAL_CLICKS"], description: "Sort indicator" },
+        order_by: { type: "string", enum: ["TOTAL_SHOWS", "TOTAL_CLICKS"], description: "Sort indicator (required by API; defaults to TOTAL_SHOWS if omitted)" },
         query_indicator: {
           type: "array",
-          items: { type: "string" },
-          description: "Metrics: TOTAL_SHOWS, TOTAL_CLICKS, AVG_SHOW_POSITION, AVG_CLICK_POSITION, CTR",
+          items: {
+            type: "string",
+            enum: ["TOTAL_SHOWS", "TOTAL_CLICKS", "AVG_SHOW_POSITION", "AVG_CLICK_POSITION"],
+          },
+          description: "Metrics (any subset): TOTAL_SHOWS, TOTAL_CLICKS, AVG_SHOW_POSITION, AVG_CLICK_POSITION. CTR is NOT a valid API value.",
         },
         device_type_indicator: {
           type: "string",
@@ -270,8 +273,11 @@ export const webmasterTools: ToolDef[] = [
         host_id: { type: "string", description: "Host ID (from yd_webmaster_hosts_get)" },
         query_indicator: {
           type: "array",
-          items: { type: "string" },
-          description: "Metrics: TOTAL_SHOWS, TOTAL_CLICKS, AVG_SHOW_POSITION, AVG_CLICK_POSITION, CTR",
+          items: {
+            type: "string",
+            enum: ["TOTAL_SHOWS", "TOTAL_CLICKS", "AVG_SHOW_POSITION", "AVG_CLICK_POSITION"],
+          },
+          description: "Metrics (any subset): TOTAL_SHOWS, TOTAL_CLICKS, AVG_SHOW_POSITION, AVG_CLICK_POSITION. CTR is NOT a valid API value.",
         },
         date_from: { type: "string", description: "Start date YYYY-MM-DD" },
         date_to: { type: "string", description: "End date YYYY-MM-DD" },
@@ -490,8 +496,10 @@ export const webmasterHandlers: Record<string, Handler> = {
   async yd_webmaster_search_queries_popular(args) {
     const h = encodeURIComponent(String(args.host_id));
     const params: Record<string, unknown> = {};
-    for (const k of ["order_by", "query_indicator", "device_type_indicator", "date_from", "date_to", "offset", "limit"])
+    for (const k of ["query_indicator", "device_type_indicator", "date_from", "date_to", "offset", "limit"])
       if (args[k] !== undefined) params[k] = args[k];
+    // order_by is required by the Webmaster API — default it so the call doesn't 400.
+    params.order_by = args.order_by ?? "TOTAL_SHOWS";
     return text(await webmasterFetch("get", `/hosts/${h}/search-queries/popular/`, { params }));
   },
   async yd_webmaster_search_queries_history(args) {
