@@ -1,4 +1,5 @@
-import { currentToken, currentFolderId, AuthError } from "./auth.js";
+import { createSign, constants as cryptoConstants } from "node:crypto";
+import { currentToken, currentFolderId, currentServiceAccount, currentStaticIam, AuthError, type ServiceAccountKey } from "./auth.js";
 import { log, LOG_BODIES } from "./log.js";
 import type { ToolContext } from "./types.js";
 
@@ -91,19 +92,82 @@ export function callApi501(service: string, method: string, params: unknown, ctx
   return directCall(`${baseUrl().replace("/v5", "/v501")}/${service}`, service, method, params, ctx, opts?.timeoutMs);
 }
 
-let iamCache = { token: "", expires: 0, oauth: "" };
+export const IAM_TOKEN_URL = "https://iam.api.cloud.yandex.net/iam/v1/tokens";
+
+const b64url = (s: string | Buffer): string => Buffer.from(s as any).toString("base64url");
+
+/**
+ * Sign a JWT for a Yandex Cloud service account.
+ * PS256 is the only algorithm Cloud accepts, and it caps token life at one hour (exp - iat <= 3600).
+ */
+export function buildServiceAccountJwt(sa: ServiceAccountKey, now = Math.floor(Date.now() / 1000)): string {
+  const header = b64url(JSON.stringify({ typ: "JWT", alg: "PS256", kid: sa.keyId }));
+  const payload = b64url(JSON.stringify({ iss: sa.id, aud: IAM_TOKEN_URL, iat: now, exp: now + 3600 }));
+  const signature = createSign("RSA-SHA256")
+    .update(`${header}.${payload}`)
+    .sign({
+      key: sa.privateKey,
+      padding: cryptoConstants.RSA_PKCS1_PSS_PADDING,
+      saltLength: cryptoConstants.RSA_PSS_SALTLEN_DIGEST,
+    });
+  return `${header}.${payload}.${b64url(signature)}`;
+}
+
+let iamCache = { token: "", expires: 0, key: "" };
+export function resetIamCache(): void { iamCache = { token: "", expires: 0, key: "" }; }
+
+/** Which credential getIamToken would use. Exposed so yd_auth_status can report it honestly. */
+export function iamSource(): "service_account" | "static_token" | "oauth" | "none" {
+  if (currentServiceAccount()) return "service_account";
+  if (currentStaticIam()) return "static_token";
+  if (currentToken()) return "oauth";
+  return "none";
+}
+
+const SA_SETUP_HINT =
+  "Yandex Cloud no longer exchanges OAuth tokens issued on/after 2026-06-01 for IAM tokens, so Wordstat needs a service account. " +
+  "Run `yc iam key create --service-account-name <name> -o key.json`, then call yd_set_service_account with that file.";
 
 export async function getIamToken(fetchImpl: typeof fetch = fetch): Promise<string> {
   const now = Date.now() / 1000;
-  const oauth = currentToken();
-  if (iamCache.token && iamCache.oauth === oauth && iamCache.expires > now + 300) return iamCache.token;
-  const resp = await fetchImpl("https://iam.api.cloud.yandex.net/iam/v1/tokens", {
-    method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ yandexPassportOauthToken: oauth }),
+
+  const sa = currentServiceAccount();
+  const stat = currentStaticIam();
+  let body: string;
+  let cacheKey: string;
+
+  if (sa) {
+    // Preferred: self-renewing, no expiry to babysit.
+    body = JSON.stringify({ jwt: buildServiceAccountJwt(sa) });
+    cacheKey = `sa:${sa.id}:${sa.keyId}`;
+  } else if (stat) {
+    // Stopgap: a token pasted from `yc iam create-token`. Nothing to exchange, just hand it back.
+    if (stat.expiresAt && stat.expiresAt < now + 60) {
+      throw new AuthError(`Static IAM token expired. Run \`yc iam create-token\` and call yd_set_iam_token again, or set up a service account: ${SA_SETUP_HINT}`);
+    }
+    return stat.token;
+  } else {
+    const oauth = currentToken();
+    if (!oauth) throw new AuthError(`No IAM credential configured. ${SA_SETUP_HINT}`);
+    // Legacy: only works for OAuth tokens issued before 2026-06-01.
+    body = JSON.stringify({ yandexPassportOauthToken: oauth });
+    cacheKey = `oauth:${oauth}`;
+  }
+
+  if (iamCache.token && iamCache.key === cacheKey && iamCache.expires > now + 300) return iamCache.token;
+
+  const resp = await fetchImpl(IAM_TOKEN_URL, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body,
   });
   const data = await resp.json();
-  if (!data.iamToken) throw new Error(`Failed to get IAM token: ${JSON.stringify(data)}`);
-  iamCache = { token: data.iamToken, expires: iamExpiry(data, now), oauth };
+  if (!data.iamToken) {
+    const detail = JSON.stringify(data);
+    if (detail.includes("is not supported for IAM token exchange")) {
+      throw new AuthError(`Failed to get IAM token: ${detail}. ${SA_SETUP_HINT}`);
+    }
+    throw new Error(`Failed to get IAM token: ${detail}`);
+  }
+  iamCache = { token: data.iamToken, expires: iamExpiry(data, now), key: cacheKey };
   return iamCache.token;
 }
 

@@ -4,8 +4,8 @@ import assert from "node:assert/strict";
 import { ALL_TOOLS } from "../src/index.ts";
 
 const EXPECTED = [
-  // auth (3)
-  "yd_auth_status", "yd_set_client_id", "yd_set_token",
+  // auth (5)
+  "yd_auth_status", "yd_set_client_id", "yd_set_token", "yd_set_service_account", "yd_set_iam_token",
   // direct core (46)
   "yd_campaigns_get","yd_campaigns_add","yd_campaigns_update","yd_campaigns_action",
   "yd_adgroups_add","yd_adgroups_get","yd_ads_add","yd_ads_update","yd_ads_get","yd_ads_action",
@@ -49,10 +49,10 @@ const EXPECTED = [
   "yd_webmaster_recrawl_submit","yd_webmaster_recrawl_list","yd_webmaster_recrawl_task","yd_webmaster_recrawl_quota","yd_webmaster_important_urls",
 ];
 
-test("ALL_TOOLS has exactly the expected 153 tool names", () => {
+test("ALL_TOOLS has exactly the expected 155 tool names", () => {
   const actual = ALL_TOOLS.map((t) => t.name).sort();
   const expected = [...EXPECTED].sort();
-  assert.equal(actual.length, 153);
+  assert.equal(actual.length, 155);
   assert.deepEqual(actual, expected);
 });
 
