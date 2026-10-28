@@ -34,6 +34,10 @@ export const metrikaTools: ToolDef[] = [
       properties: {
         name: { type: "string", description: "Counter name" },
         site: { type: "string", description: "Site domain (e.g. example.com)" },
+        visor: { type: "boolean", description: "Webvisor (session recording)" },
+        clickmap: { type: "boolean", description: "Click map" },
+        track_links: { type: "boolean", description: "Track external links" },
+        accurate_track_bounce: { type: "boolean", description: "Accurate bounce rate" },
       },
       required: ["name", "site"],
     },
@@ -48,6 +52,10 @@ export const metrikaTools: ToolDef[] = [
         name: { type: "string", description: "New name" },
         site: { type: "string", description: "New site domain" },
         favorite: { type: "boolean", description: "Mark as favorite" },
+        visor: { type: "boolean", description: "Webvisor (session recording)" },
+        clickmap: { type: "boolean", description: "Click map" },
+        track_links: { type: "boolean", description: "Track external links" },
+        accurate_track_bounce: { type: "boolean", description: "Accurate bounce rate" },
       },
       required: ["counter_id"],
     },
@@ -571,6 +579,14 @@ export const metrikaTools: ToolDef[] = [
   },
 ];
 
+function codeOptions(args: Record<string, unknown>): Record<string, number> | undefined {
+  const co: Record<string, number> = {};
+  for (const k of ["visor", "clickmap", "track_links", "accurate_track_bounce"]) {
+    if (args[k] != null) co[k] = args[k] ? 1 : 0;
+  }
+  return Object.keys(co).length ? co : undefined;
+}
+
 export const metrikaHandlers: Record<string, Handler> = {
   // ── COUNTERS ────────────────────────────────────────────────────────
 
@@ -586,7 +602,9 @@ export const metrikaHandlers: Record<string, Handler> = {
   },
 
   async yd_metrika_counter_create(args) {
-    const body = { counter: { name: String(args.name), site2: { site: String(args.site) } } };
+    const body: { counter: Record<string, unknown> } = { counter: { name: String(args.name), site2: { site: String(args.site) } } };
+    const co = codeOptions(args);
+    if (co) body.counter.code_options = co;
     return text(await metrikaFetch("post", "/management/v1/counters", { body }));
   },
 
@@ -596,6 +614,8 @@ export const metrikaHandlers: Record<string, Handler> = {
     for (const k of ["name", "site", "favorite"] as const) {
       if (args[k] != null) counter[k] = args[k];
     }
+    const co = codeOptions(args);
+    if (co) counter.code_options = co;
     return text(await metrikaFetch("put", `/management/v1/counter/${cid}`, { body: { counter } }));
   },
 
