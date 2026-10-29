@@ -93,9 +93,10 @@ export const metrikaTools: ToolDef[] = [
         counter_id: { type: "integer", description: "Counter ID" },
         name: { type: "string", description: "Goal name" },
         goal_type: { type: "string", description: "Goal type: url, number, step, action, phone, email, etc." },
-        conditions: { type: "array", items: { type: "object" }, description: "Conditions array, e.g. [{\"type\": \"contain\", \"url\": \"/thank-you\"}]" },
+        conditions: { type: "array", items: { type: "object" }, description: "Conditions array, e.g. [{\"type\": \"contain\", \"url\": \"/thank-you\"}]. Not used for goal_type=step." },
+        steps: { type: "array", items: { type: "object" }, description: "For goal_type=step: [{\"name\": \"Step 1\", \"type\": \"action\", \"conditions\": [{\"type\": \"exact\", \"url\": \"cta_click\"}]}, ...]" },
       },
-      required: ["counter_id", "name", "goal_type", "conditions"],
+      required: ["counter_id", "name", "goal_type"],
     },
   },
   {
@@ -635,7 +636,7 @@ export const metrikaHandlers: Record<string, Handler> = {
       goal: {
         name: args.name,
         type: args.goal_type,
-        conditions: args.conditions,
+        ...(args.steps ? { steps: args.steps } : { conditions: args.conditions }),
       },
     };
     return text(await metrikaFetch("post", `/management/v1/counter/${cid}/goals`, { body }));
